@@ -1,0 +1,47 @@
+{
+  "nodes": [
+    {
+      "id": "README.md"
+    },
+    {
+      "id": "package-lock.json"
+    },
+    {
+      "id": "package.json"
+    },
+    {
+      "id": "tsconfig.json"
+    },
+    {
+      "id": "src/cli.ts"
+    },
+    {
+      "id": "src/config.ts"
+    },
+    {
+      "id": "src/commands/generate.ts"
+    },
+    {
+      "id": "src/commands/login.ts"
+    },
+    {
+      "id": "src/core/chunk.ts"
+    },
+    {
+      "id": "src/core/docs.ts"
+    },
+    {
+      "id": "src/core/graph.ts"
+    },
+    {
+      "id": "src/core/scan.ts"
+    },
+    {
+      "id": "src/core/summarize.ts"
+    },
+    {
+      "id": "src/core/upload.ts"
+    }
+  ],
+  "edges": []
+}
