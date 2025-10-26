@@ -162,7 +162,7 @@ export function registerAgentRoutes(app: FastifyInstance) {
         if (!projectId) return reply.code(400).send({ error: 'Project ID is required' });
 
         // Find project and verify ownership
-        const project = db.projects.get(projectId);
+        const project = await database.getProject(projectId);
         if (!project) return reply.code(404).send({ error: 'Project not found' });
         if (project.owner_user_id !== userId) {
             return reply.code(403).send({ error: 'You do not have access to this project' });
