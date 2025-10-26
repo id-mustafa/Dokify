@@ -199,7 +199,7 @@ export function Visualize() {
         };
 
         const fileSphereGeo = new THREE.SphereGeometry(8, 16, 16);
-        const dirOctaGeo = new THREE.OctahedronGeometry(10, 0);
+        const dirOctaGeo = new THREE.OctahedronGeometry(15, 0); // Bigger octahedrons for directories
         const nodes3D: Node3D[] = [];
         const nodeMap = new Map<string, Node3D>();
 
@@ -264,9 +264,10 @@ export function Visualize() {
                 ];
                 const geometry = new THREE.BufferGeometry().setFromPoints(points);
                 const material = new THREE.LineBasicMaterial({
-                    color: 0x475569,
+                    color: 0x60a5fa, // Bright blue to match nodes
                     transparent: true,
-                    opacity: 0.6
+                    opacity: 0.8,
+                    linewidth: 2 // Thicker lines
                 });
                 const line = new THREE.Line(geometry, material);
                 scene.add(line);
