@@ -1,6 +1,6 @@
 {
     "name": "dokify",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "private": false,
     "description": "Dokify CLI - generate and upload documentation for your codebase",
     "bin": {
