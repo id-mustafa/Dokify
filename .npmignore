@@ -1,0 +1,14 @@
+server/
+web/
+test/
+.env
+.env.*
+.dokify/
+src/
+
+docs/files/web/
+docs/files/server/
+docs/files/test/
+docs/files/.env
+docs/files/.env.*
+docs/files/.dokify/

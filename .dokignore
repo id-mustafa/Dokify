@@ -1,0 +1,6 @@
+test/
+server/
+
+web/
+/.env
+/.env.*
