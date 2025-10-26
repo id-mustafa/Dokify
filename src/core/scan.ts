@@ -1,7 +1,6 @@
 import fg from 'fast-glob';
 import path from 'node:path';
 import fs from 'node:fs';
-import ignore from 'ignore';
 
 export type ScanOptions = {
     include?: string[];
@@ -23,19 +22,19 @@ const DEFAULT_EXCLUDE = [
     '**/.cache/**',
     '**/.turbo/**',
     '**/.venv/**',
+    '**/.dokify/**',
+    '**/docs/**',
     '**/*.min.*',
     '**/*.map'
 ];
 
 function loadIgnores(root: string): string[] {
-    const ig = ignore();
-    const paths = ['.gitignore', '.dokifyignore'];
+    const paths = ['.gitignore', '.dokignore'];
     const lines: string[] = [];
     for (const p of paths) {
         const fp = path.join(root, p);
         if (fs.existsSync(fp)) {
             const content = fs.readFileSync(fp, 'utf-8');
-            ig.add(content);
             lines.push(...content.split(/\r?\n/));
         }
     }

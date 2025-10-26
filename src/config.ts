@@ -5,12 +5,17 @@ import os from 'node:os';
 export type DokifyConfig = {
     apiBaseUrl: string | null;
     token: string | null;
+    apiKey?: string | null;
     defaultModels: {
         haiku: string;
         gemini: string;
     };
     concurrency: number;
     localOnly: boolean;
+    byok?: {
+        anthropic?: string | null;
+        google?: string | null;
+    };
 };
 
 function computeConfigDir(): string {
@@ -43,10 +48,14 @@ const DEFAULT_CONFIG: DokifyConfig = {
     token: null,
     defaultModels: {
         haiku: 'claude-3-5-haiku-latest',
-        gemini: 'gemini-1.5-pro-latest'
+        gemini: 'gemini-1.5-flash'
     },
     concurrency: Math.max(4, os.cpus().length - 1),
-    localOnly: false
+    localOnly: false,
+    byok: {
+        anthropic: null,
+        google: null
+    }
 };
 
 export function ensureConfigDir(): void {
@@ -72,7 +81,7 @@ export function loadConfig(): DokifyConfig {
     try {
         const raw = fs.readFileSync(CONFIG_PATH, 'utf-8');
         const parsed = JSON.parse(raw) as Partial<DokifyConfig>;
-        return { ...DEFAULT_CONFIG, ...parsed, defaultModels: { ...DEFAULT_CONFIG.defaultModels, ...(parsed.defaultModels || {}) } };
+        return { ...DEFAULT_CONFIG, ...parsed, defaultModels: { ...DEFAULT_CONFIG.defaultModels, ...(parsed.defaultModels || {}) }, byok: { ...DEFAULT_CONFIG.byok, ...(parsed.byok || {}) } };
     } catch {
         return { ...DEFAULT_CONFIG };
     }

@@ -1,5 +1,7 @@
 import { FileChunk } from './chunk.js';
 import os from 'node:os';
+import { CacheStore } from './cache.js';
+import { AnthropicProvider } from '../llm/anthropic.js';
 
 export type ChunkSummary = {
     filePath: string;
@@ -16,6 +18,7 @@ export type ChunkSummary = {
 export type SummarizeOptions = {
     localOnly?: boolean;
     concurrency?: number;
+    noCache?: boolean;
 };
 
 export async function summarizeChunks(chunks: FileChunk[], options: SummarizeOptions): Promise<ChunkSummary[]> {
@@ -23,6 +26,9 @@ export async function summarizeChunks(chunks: FileChunk[], options: SummarizeOpt
     const queue = chunks.slice();
     const results: ChunkSummary[] = [];
     const workers: Promise<void>[] = [];
+    const cache = new CacheStore(process.cwd());
+
+    const anthropic = options.localOnly ? null : null; // move AI to server
 
     for (let i = 0; i < concurrency; i++) {
         workers.push(
@@ -30,7 +36,29 @@ export async function summarizeChunks(chunks: FileChunk[], options: SummarizeOpt
                 while (queue.length > 0) {
                     const chunk = queue.shift();
                     if (!chunk) break;
-                    const summary = await summarizeSingle(chunk, options);
+                    const cacheKey = cache.keyFor({ filePath: chunk.filePath, index: chunk.index, total: chunk.total, contentHash: hashStr(chunk.content), model: anthropic ? 'anthropic-haiku' : 'local' });
+                    if (!options.noCache) {
+                        const cached = cache.read<ChunkSummary>(cacheKey);
+                        if (cached) { results.push(cached); continue; }
+                    }
+
+                    let summary = await summarizeSingle(chunk, options);
+                    if (!options.localOnly) {
+                        try {
+                            // Fetch server-side chunk summary
+                            const server = process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000';
+                            const res = await fetch(server.replace(/\/$/, '') + '/v1/ai/chunk-summaries', {
+                                method: 'POST', headers: { 'content-type': 'application/json' },
+                                body: JSON.stringify({ chunks: [{ index: chunk.index, startLine: chunk.startLine, endLine: chunk.endLine, content: chunk.content }] })
+                            });
+                            if (res.ok) {
+                                const json = await res.json() as any;
+                                const partial = json?.summaries?.[0] || {};
+                                summary = { ...summary, ...partial } as ChunkSummary;
+                            }
+                        } catch { }
+                    }
+                    if (!options.noCache) cache.write(cacheKey, summary);
                     results.push(summary);
                 }
             })()
@@ -78,5 +106,11 @@ async function summarizeSingle(chunk: FileChunk, options: SummarizeOptions): Pro
 function pathBase(p: string): string {
     const parts = p.split(/[/\\]/);
     return parts[parts.length - 1] || p;
+}
+
+function hashStr(s: string): string {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; }
+    return String(h >>> 0);
 }
 
