@@ -30,7 +30,7 @@ const devices = new Map<string, DeviceRecord>();
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
-const BASE = process.env.API_BASE || `https://dokify-api.onrender.com:${PORT}`;
+const BASE = process.env.API_BASE || `http://127.0.0.1:${PORT}`;
 const VERIFY_BASE = process.env.VERIFY_BASE || BASE;
 const WEB_BASE = process.env.WEB_BASE || VERIFY_BASE;
 

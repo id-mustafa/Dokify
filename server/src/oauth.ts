@@ -5,13 +5,13 @@ import { customAlphabet } from 'nanoid';
 
 const nano = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 16);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
-const WEB_BASE = process.env.WEB_BASE || process.env.VERIFY_BASE || 'https://dokify.onrender.com:5173';
+const WEB_BASE = process.env.WEB_BASE || process.env.VERIFY_BASE || 'http://127.0.0.1:5173';
 
 export function registerOAuthRoutes(app: FastifyInstance) {
     // GitHub OAuth
     app.get('/v1/oauth/github/start', async (req, reply) => {
         const clientId = process.env.GITHUB_CLIENT_ID;
-        const redirectUri = (process.env.GITHUB_REDIRECT_URI || `${process.env.API_BASE || 'https://dokify-api.onrender.com'}/v1/oauth/github/callback`).toString();
+        const redirectUri = (process.env.GITHUB_REDIRECT_URI || `${process.env.API_BASE || 'http://127.0.0.1:4000'}/v1/oauth/github/callback`).toString();
         const state = nano();
         const redirect = `https://github.com/login/oauth/authorize?client_id=${encodeURIComponent(clientId || '')}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${state}`;
         reply.redirect(redirect);
@@ -48,7 +48,7 @@ export function registerOAuthRoutes(app: FastifyInstance) {
     // Google OAuth
     app.get('/v1/oauth/google/start', async (req, reply) => {
         const clientId = process.env.GOOGLE_CLIENT_ID || '';
-        const redirectUri = (process.env.GOOGLE_REDIRECT_URI || `${process.env.API_BASE || 'https://dokify-api.onrender.com:4000'}/v1/oauth/google/callback`).toString();
+        const redirectUri = (process.env.GOOGLE_REDIRECT_URI || `${process.env.API_BASE || 'http://127.0.0.1:4000'}/v1/oauth/google/callback`).toString();
         const scope = encodeURIComponent('openid email profile');
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&access_type=online&prompt=consent`;
         reply.redirect(authUrl);
@@ -60,7 +60,7 @@ export function registerOAuthRoutes(app: FastifyInstance) {
             if (!params.code) return reply.code(400).send({ error: 'invalid_request' });
             const clientId = process.env.GOOGLE_CLIENT_ID || '';
             const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-            const redirectUri = (process.env.GOOGLE_REDIRECT_URI || `${process.env.API_BASE || 'https://dokify-api.onrender.com:4000'}/v1/oauth/google/callback`).toString();
+            const redirectUri = (process.env.GOOGLE_REDIRECT_URI || `${process.env.API_BASE || 'http://127.0.0.1:4000'}/v1/oauth/google/callback`).toString();
             const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
                 method: 'POST',
                 headers: { 'content-type': 'application/x-www-form-urlencoded' },
