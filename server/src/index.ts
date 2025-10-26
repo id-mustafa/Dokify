@@ -13,7 +13,7 @@ import { attachWebSocket } from './ws.js';
 import { claudeSummaries, geminiSynthesize, geminiReadme, mapFacts } from './llm.js';
 
 const nano = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZx', 6);
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, bodyLimit: 50 * 1024 * 1024 });
 
 type DeviceRecord = {
     deviceCode: string;

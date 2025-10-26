@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { loadConfig } from '../config.js';
 import { RepoScan } from './scan.js';
 import { FileChunk } from './chunk.js';
 import { ChunkSummary } from './summarize.js';
-import { GeminiProvider } from '../llm/gemini.js';
 
 export type WriteDocsParams = {
     projectRoot: string;
@@ -11,8 +11,7 @@ export type WriteDocsParams = {
     scan: RepoScan;
     chunks: FileChunk[];
     summaries: ChunkSummary[];
-    gemini?: GeminiProvider;
-    useGemini?: boolean;
+    useAI?: boolean;
     fileSynthesisConcurrency?: number;
 };
 
@@ -76,25 +75,16 @@ export async function writeDocs(params: WriteDocsParams): Promise<WriteDocsResul
                     body = renderPackageJsonDoc(path.join(params.projectRoot, rel), rel);
                 } else if (/(^|\/)package-lock\.json$/i.test(rel)) {
                     body = renderPackageLockDoc(rel);
-                } else if (params.useGemini && params.gemini) {
-                    try {
-                        const snippets = params.chunks
-                            .filter((c) => c.filePath === filePath)
-                            .map((c) => ({ index: c.index, startLine: c.startLine, endLine: c.endLine, text: c.content }));
-                        const rich = await params.gemini.synthesizeFile(rel, list, snippets);
-                        if (rich && rich.trim().length > 0) {
-                            body = sanitizeMarkdown(rich);
-                        }
-                    } catch { }
-                } else {
+                } else if (params.useAI) {
                     // Server-side synthesis fallback
                     try {
-                        const server = process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000';
+                        const cfg = loadConfig();
+                        const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
                         const snippets = params.chunks
                             .filter((c) => c.filePath === filePath)
                             .map((c) => ({ index: c.index, startLine: c.startLine, endLine: c.endLine, content: c.content }));
-                        const res = await fetch(server.replace(/\/$/, '') + '/v1/ai/file-synthesis', {
-                            method: 'POST', headers: { 'content-type': 'application/json' },
+                        const res = await fetch(server + '/v1/ai/file-synthesis', {
+                            method: 'POST', headers: { 'content-type': 'application/json', ...(cfg.token ? { authorization: `Bearer ${cfg.token}` } : {}) },
                             body: JSON.stringify({ filePath: rel, summaries: list, snippets })
                         });
                         if (res.ok) {
@@ -119,12 +109,23 @@ export async function writeDocs(params: WriteDocsParams): Promise<WriteDocsResul
     const overviewMd = path.join(overviewDir, 'overview.md');
     fs.writeFileSync(overviewMd, renderOverview(params.scan), 'utf-8');
 
-    // Write a synthesized README at repo root of docs
-    if (params.useGemini && params.gemini) {
+    // Write a synthesized README at repo root of docs via server
+    if (params.useAI) {
         try {
-            const readme = await params.gemini.synthesizeReadme(params.summaries, { repoName: path.basename(params.projectRoot) });
-            const readmePath = path.join(params.docsDir, 'README.md');
-            fs.writeFileSync(readmePath, readme, 'utf-8');
+            const cfg = loadConfig();
+            const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
+            const res = await fetch(server + '/v1/ai/project-readme', {
+                method: 'POST', headers: { 'content-type': 'application/json', ...(cfg.token ? { authorization: `Bearer ${cfg.token}` } : {}) },
+                body: JSON.stringify({ summaries: params.summaries, repoName: path.basename(params.projectRoot) })
+            });
+            if (res.ok) {
+                const json = await res.json() as any;
+                const readme = String(json?.markdown || '');
+                if (readme.trim()) {
+                    const readmePath = path.join(params.docsDir, 'README.md');
+                    fs.writeFileSync(readmePath, readme, 'utf-8');
+                }
+            }
         } catch { }
     }
 

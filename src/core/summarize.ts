@@ -1,7 +1,8 @@
 import { FileChunk } from './chunk.js';
 import os from 'node:os';
+import { loadConfig } from '../config.js';
 import { CacheStore } from './cache.js';
-import { AnthropicProvider } from '../llm/anthropic.js';
+// Client no longer directly calls LLMs; summaries fetched from server
 
 export type ChunkSummary = {
     filePath: string;
@@ -45,10 +46,15 @@ export async function summarizeChunks(chunks: FileChunk[], options: SummarizeOpt
                     let summary = await summarizeSingle(chunk, options);
                     if (!options.localOnly) {
                         try {
-                            // Fetch server-side chunk summary
-                            const server = process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000';
+                            // Fetch server-side chunk summary (requires auth)
+                            const cfg = loadConfig();
+                            const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
                             const res = await fetch(server.replace(/\/$/, '') + '/v1/ai/chunk-summaries', {
-                                method: 'POST', headers: { 'content-type': 'application/json' },
+                                method: 'POST',
+                                headers: {
+                                    'content-type': 'application/json',
+                                    ...(cfg.token ? { authorization: `Bearer ${cfg.token}` } : {})
+                                },
                                 body: JSON.stringify({ chunks: [{ index: chunk.index, startLine: chunk.startLine, endLine: chunk.endLine, content: chunk.content }] })
                             });
                             if (res.ok) {

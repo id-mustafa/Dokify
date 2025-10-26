@@ -9,7 +9,6 @@ import { chunkFiles } from '../core/chunk.js';
 import { summarizeChunks } from '../core/summarize.js';
 import { writeDocs } from '../core/docs.js';
 import { buildGraph, writeViewer } from '../core/graph.js';
-import { GeminiProvider } from '../llm/gemini.js';
 import { uploadDocs } from '../core/upload.js';
 import dotenv from 'dotenv';
 
@@ -48,18 +47,14 @@ export function registerGenerateCommand(program: Command): void {
                 const spinner3 = ora(opts.localOnly ? 'Summarizing (local fallback)' : 'Summarizing with AI').start();
                 const noAI = !!opts.noAi;
                 const summaries = await summarizeChunks(chunks, {
-                    localOnly: noAI || !(process.env.ANTHROPIC_API_KEY),
+                    localOnly: noAI,
                     concurrency: opts.concurrency ?? config.concurrency,
                     noCache: !!opts.noCache
                 });
                 spinner3.succeed(`Summarized ${summaries.length} chunks`);
 
                 const spinner4 = ora('Writing docs').start();
-                const geminiModel = process.env.GOOGLE_MODEL || process.env.GEMINI_MODEL || config.defaultModels.gemini;
-                const gemini = (!(opts.localOnly ?? false) && !noAI && (process.env.GOOGLE_API_KEY))
-                    ? new GeminiProvider({ apiKey: process.env.GOOGLE_API_KEY || '', model: geminiModel })
-                    : undefined;
-                const fileDocs = await writeDocs({ projectRoot, docsDir, scan, chunks, summaries, gemini, useGemini: !!gemini, fileSynthesisConcurrency: Math.max(2, Math.min(8, (opts.concurrency ?? config.concurrency) >> 1)) });
+                const fileDocs = await writeDocs({ projectRoot, docsDir, scan, chunks, summaries, useAI: !noAI, fileSynthesisConcurrency: Math.max(2, Math.min(8, (opts.concurrency ?? config.concurrency) >> 1)) });
                 spinner4.succeed(`Wrote ${fileDocs.written} docs`);
 
                 const spinner5 = ora('Building graph and viewer').start();
@@ -72,9 +67,10 @@ export function registerGenerateCommand(program: Command): void {
                     const spinnerSynth = ora('Synthesizing project overview').start();
                     let overview = '';
                     try {
-                        const server = process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000';
-                        const res = await fetch(server.replace(/\/$/, '') + '/v1/ai/project-readme', {
-                            method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ summaries, repoName: path.basename(projectRoot) })
+                        const cfg2 = loadConfig();
+                        const server = (cfg2.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
+                        const res = await fetch(server + '/v1/ai/project-readme', {
+                            method: 'POST', headers: { 'content-type': 'application/json', ...(cfg2.token ? { authorization: `Bearer ${cfg2.token}` } : {}) }, body: JSON.stringify({ summaries, repoName: path.basename(projectRoot) })
                         });
                         if (res.ok) {
                             const json = await res.json() as any;

@@ -39,13 +39,17 @@ export async function uploadDocs(params: { docsDir: string }): Promise<void> {
         files.push({ path: rel, content });
     });
 
-    // Upload
-    const upRes = await fetch(`${api}/v1/projects/${projectId}/docs`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ files })
-    });
-    if (!upRes.ok) throw new Error(`Failed to upload docs: ${upRes.status}`);
+    // Upload in batches to avoid 413
+    const batchSize = 200;
+    for (let i = 0; i < files.length; i += batchSize) {
+        const slice = files.slice(i, i + batchSize);
+        const upRes = await fetch(`${api}/v1/projects/${projectId}/docs`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ files: slice })
+        });
+        if (!upRes.ok) throw new Error(`Failed to upload docs: ${upRes.status}`);
+    }
 }
 
 function walk(dir: string, onFile: (fp: string) => void) {
