@@ -39,6 +39,7 @@ export async function uploadDocs(params: { docsDir: string }): Promise<void> {
         files.push({ path: rel, content });
     });
 
+
     // Upload in batches to avoid 413
     const batchSize = 200;
     for (let i = 0; i < files.length; i += batchSize) {

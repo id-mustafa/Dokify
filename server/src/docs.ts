@@ -32,6 +32,20 @@ export function registerDocsRoutes(app: FastifyInstance) {
         return { id, name, slug };
     });
 
+    app.delete('/v1/projects/:projectId', async (req, reply) => {
+        let userId: string;
+        try { userId = requireAuth(req); } catch { return reply.code(401).send({ error: 'unauthorized' }); }
+        const { projectId } = req.params as any;
+        const project = db.projects.get(projectId) as any;
+        if (!project || project.owner_user_id !== userId) return reply.code(404).send({ error: 'project_not_found' });
+        db.projects.delete(projectId);
+        for (const [key, doc] of Array.from(db.docs.entries())) {
+            if (doc.project_id === projectId) db.docs.delete(key);
+        }
+        try { (app as any).ws?.broadcast('', { type: 'project-deleted', projectId }); } catch { }
+        return { ok: true };
+    });
+
     app.post('/v1/projects/:projectId/docs', async (req, reply) => {
         let userId: string;
         try { userId = requireAuth(req); } catch { return reply.code(401).send({ error: 'unauthorized' }); }

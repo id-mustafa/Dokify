@@ -46,8 +46,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <NavLink component={Link} to="/" label="Home" active={active('/')} />
                     <NavLink component={Link} to="/usage" label="Usage" active={active('/usage')} />
                     {isAuthed && <NavLink component={Link} to="/projects" label="Projects" active={active('/projects')} />}
-                    {isAuthed && <NavLink component={Link} to="/DokAgent" label="DokAgent" active={active('/dokagent')} />}
-                    {isAuthed && <NavLink component={Link} to="/Visualizer" label="Visualizer" active={active('/visualizer')} />}
+                    {isAuthed && <NavLink component={Link} to="/agent" label="DokAgent" active={active('/agent')} />}
+                    {isAuthed && <NavLink component={Link} to="/visualize" label="Visualizer" active={active('/visualize')} />}
                 </AppShell.Section>
                 <AppShell.Section grow />
                 {isAuthed && (

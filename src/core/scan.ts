@@ -25,7 +25,11 @@ const DEFAULT_EXCLUDE = [
     '**/.dokify/**',
     '**/docs/**',
     '**/*.min.*',
-    '**/*.map'
+    '**/*.map',
+    // binary/non-text common formats
+    '**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.webp', '**/*.ico',
+    '**/*.pdf', '**/*.zip', '**/*.gz', '**/*.bz2', '**/*.tgz', '**/*.tar', '**/*.jar',
+    '**/*.exe', '**/*.dll', '**/*.bin'
 ];
 
 function loadIgnores(root: string): string[] {

@@ -3,15 +3,54 @@ import path from 'node:path';
 import { RepoScan } from './scan.js';
 
 export type Graph = {
-    nodes: { id: string }[];
+    nodes: { id: string; type: 'file' | 'directory' }[];
     edges: { source: string; target: string }[];
 };
 
 export async function buildGraph(scan: RepoScan): Promise<Graph> {
-    const nodes = scan.files.map((f) => ({ id: path.relative(scan.root, f) }));
-    // MVP: no edges without parsing imports across languages; leave empty
-    const edges: { source: string; target: string }[] = [];
-    return { nodes, edges };
+    const nodeSet = new Set<string>();
+    const edges: Array<{ source: string; target: string }> = [];
+
+    // Build a tree graph: add all files and create parent->child relationships
+    for (const abs of scan.files) {
+        const rel = path.relative(scan.root, abs).replace(/\\/g, '/');
+        nodeSet.add(rel); // Add the file
+
+        // For each file, create edges from parent directories to children
+        const parts = rel.split('/');
+
+        // If file is in subdirectories, add directory nodes and edges
+        if (parts.length > 1) {
+            for (let i = 0; i < parts.length - 1; i++) {
+                const dirPath = parts.slice(0, i + 1).join('/');
+                const childPath = parts.slice(0, i + 2).join('/');
+
+                nodeSet.add(dirPath); // Add directory node
+
+                // Create edge from directory to its child (either subdirectory or file)
+                edges.push({ source: dirPath, target: childPath });
+            }
+        }
+    }
+
+    // Helper function to check if a path is a directory (no file extension)
+    function isDirectory(id: string): boolean {
+        const lastPart = id.split('/').pop() || '';
+        return !lastPart.includes('.');
+    }
+
+    // Build nodes array with auto-detected types
+    const nodes: Array<{ id: string; type: 'file' | 'directory' }> = Array.from(nodeSet).map(id => ({
+        id,
+        type: isDirectory(id) ? 'directory' : 'file'
+    }));
+
+    // Deduplicate edges
+    const uniqueEdges = Array.from(
+        new Map(edges.map(e => [`${e.source}→${e.target}`, e])).values()
+    );
+
+    return { nodes, edges: uniqueEdges };
 }
 
 export async function writeViewer(params: { docsDir: string; graph: Graph }): Promise<void> {

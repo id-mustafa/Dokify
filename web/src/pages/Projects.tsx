@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Button, TextInput, Title, Text } from '@mantine/core';
+import { Card, Button, TextInput, Title, Text, Group } from '@mantine/core';
 import { api } from '../lib/api';
 
 type Project = { id: string; name: string; slug: string };
@@ -45,6 +45,11 @@ export function Projects() {
         refresh();
     }
 
+    async function remove(id: string) {
+        await api(`/v1/projects/${id}`, { method: 'DELETE' });
+        refresh();
+    }
+
     return (
         <div>
             <div className="container">
@@ -63,7 +68,11 @@ export function Projects() {
                                             <Text c="white">{p.name}</Text>
                                             <Text c="dimmed" size="sm">{p.slug}</Text>
                                         </div>
-                                        <Link className="link" to={`/projects/${p.id}`}>Open</Link>
+                                        <Group gap="xs">
+                                            <Link className="link" to={`/projects/${p.id}`}>Open</Link>
+                                            <Link className="link" to={`/projects/${p.id}/visualize`}>Visualize</Link>
+                                            <Button size="xs" color="red" variant="light" onClick={() => remove(p.id)}>Delete</Button>
+                                        </Group>
                                     </div>
                                 </Card>
                             ))}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const API_BASE = import.meta.env.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+const API_BASE = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
 
 export function Verify() {
     const [status, setStatus] = useState('');

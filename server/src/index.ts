@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { db } from './db.js';
 import 'dotenv/config';
 import { migrate } from './db.js';
+import { initDatabase } from './database.js';
 import { registerAuthRoutes } from './auth.js';
 import { registerDocsRoutes } from './docs.js';
 import { registerOAuthRoutes } from './oauth.js';
@@ -141,6 +142,37 @@ app.post('/v1/ai/project-readme', async (req, reply) => {
     return { markdown: text };
 });
 
+// Serve visualization assets (limited to known filenames)
+app.get('/v1/projects/:projectId/assets/:name', async (req, reply) => {
+    let userId: string;
+    try { userId = requireAuth(req as any); } catch { return reply.code(401).send({ error: 'unauthorized' }); }
+    const { projectId, name } = req.params as any;
+    const project = db.projects.get(projectId) as any;
+    if (!project || project.owner_user_id !== userId) return reply.code(404).send({ error: 'project_not_found' });
+    const allowed = new Set(['graph.json', 'index.html']);
+    if (!allowed.has(String(name))) return reply.code(404).send({ error: 'not_found' });
+    const nameStr = String(name);
+    // Try exact key first
+    const exactKey = projectId + '::' + nameStr;
+    let doc = db.docs.get(exactKey) as any;
+    // Fallback: find any doc with this file name suffix (e.g., nested paths)
+    if (!doc) {
+        for (const [k, v] of db.docs.entries()) {
+            if (!k.startsWith(projectId + '::')) continue;
+            const p = (v as any).path as string;
+            if (p && (p === nameStr || p.endsWith('/' + nameStr))) { doc = v; break; }
+        }
+    }
+    if (!doc) return reply.code(404).send({ error: 'not_found' });
+    if (name === 'graph.json') {
+        reply.header('content-type', 'application/json');
+        return reply.send(doc.content);
+    } else {
+        reply.header('content-type', 'text/html; charset=utf-8');
+        return reply.send(doc.content);
+    }
+});
+
 // Web approval endpoint: user must be authenticated; links device_code to user
 app.post('/v1/oauth/approve', async (req, reply) => {
     const auth = req.headers['authorization'] || '';
@@ -180,16 +212,30 @@ const httpServer = app.server;
 const ws = attachWebSocket(httpServer);
 app.decorate('ws', ws);
 
-app.listen({ port: PORT, host: HOST }).catch((err) => {
-    app.log.error(err);
-    process.exit(1);
-});
-
 // Boot
-migrate();
-registerAuthRoutes(app);
-registerDocsRoutes(app);
-registerOAuthRoutes(app);
-registerAgentRoutes(app);
+(async () => {
+    try {
+        // Initialize database first
+        await initDatabase();
+        console.log('Database initialized');
+
+        // Run in-memory migrations for device codes (temporary data)
+        migrate();
+
+        // Register routes
+        registerAuthRoutes(app);
+        registerDocsRoutes(app);
+        registerOAuthRoutes(app);
+        registerAgentRoutes(app);
+
+        // Start server
+        await app.listen({ port: PORT, host: HOST });
+        console.log(`Server listening on ${HOST}:${PORT}`);
+    } catch (err) {
+        app.log.error(err);
+        console.error('Failed to start server:', err);
+        process.exit(1);
+    }
+})();
 
 

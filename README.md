@@ -1,108 +1,309 @@
----
-path: README.md
-chunkCount: 1
-entities:
-dependenciesPreview:
-version: 6
-generated_at: "2025-10-26T04:40:11.579Z"
----
-# Dokify CLI
+# Dokify
 
-This document provides technical documentation for the Dokify CLI tool, designed to automate the generation and uploading of documentation for your codebase.
+> AI-powered documentation generator for your codebase
 
-## Purpose
+Dokify automatically generates comprehensive, human-readable documentation for your entire codebase using advanced AI models. It creates searchable documentation, interactive 3D visualizations, and provides a beautiful web interface for browsing your project structure.
 
-The primary purpose of the Dokify CLI is to streamline the process of creating and distributing technical documentation. It achieves this by:
+## Features
 
-1.  **Generating Documentation:** Analyzing your codebase to produce markdown files for individual source files, an overview document, and a visual representation of your project's structure.
-2.  **Facilitating Upload (Future):** While currently stubbed, the CLI is designed to facilitate uploading generated documentation to a central service.
+- 📝 **AI-Generated Documentation** - Uses Claude Haiku for intelligent code analysis and Gemini for synthesizing human-readable docs
+- 🎨 **3D Visualization** - Interactive Three.js-powered graph showing your project structure
+- 🔍 **Smart Search & Browse** - Navigate documentation with collapsible file trees and markdown rendering
+- ☁️ **Cloud Sync** - Upload and share documentation with your team via Dokify.com
+- ⚡ **Fast & Cached** - Intelligent caching speeds up regeneration significantly
+- 📊 **Version Tracking** - Automatic versioning with timestamps on all documentation
 
 ## Installation
 
-To install and build the Dokify CLI, follow these steps:
+```bash
+npm install -g dokify
+```
+
+## Quick Start
 
 ```bash
+# Authenticate with Dokify
+dok login
+
+# Generate documentation for your project
+cd /path/to/your/project
+dok generate
+
+# View your docs at https://dokify.com/projects
+```
+
+## CLI Commands
+
+### `dok login`
+Authenticate with Dokify using OAuth device flow. Opens your browser to complete authentication.
+
+```bash
+dok login
+```
+
+### `dok generate`
+Generate and upload documentation for your current repository.
+
+```bash
+# Basic usage
+dok generate
+
+# Available flags:
+dok generate --no-ai              # Skip AI, generate basic structure only
+dok generate --local-only         # Generate with AI but don't upload
+dok generate --concurrency 16     # Set concurrent AI requests
+dok generate --no-cache           # Bypass cache, regenerate everything
+dok generate --help               # Show all options
+```
+
+### `dok key`
+Manage your Dokify API key.
+
+```bash
+dok key --show                    # Display current API key
+dok key --set dok_xxxxxx          # Set API key manually
+dok key --unset                   # Remove stored key
+```
+
+### Other Commands
+
+```bash
+dok whoami                        # Display current user info
+dok logout                        # Clear authentication tokens
+dok version                       # Show installed version
+```
+
+## How It Works
+
+1. **Scanning** - Dokify scans your repository, respecting `.gitignore` and `.dokignore` files
+2. **Chunking** - Large files are intelligently split into manageable chunks
+3. **AI Analysis** - Claude Haiku extracts structured facts from each code chunk
+4. **Synthesis** - Gemini combines insights into comprehensive, human-readable documentation
+5. **Upload** - Documentation is uploaded to Dokify.com with version tracking
+
+## Generated Output
+
+Dokify creates a `docs/` folder containing:
+
+```
+docs/
+├── README.md           # Project overview with setup and architecture
+├── files/              # Individual documentation for each source file
+│   ├── src/
+│   │   ├── index.ts.md
+│   │   └── ...
+├── graph.json          # Project structure data for visualization
+└── index.html          # Standalone viewer for offline browsing
+```
+
+## Configuration
+
+### Excluding Files
+
+Create a `.dokignore` file in your project root:
+
+```
+# .dokignore
+node_modules/
+dist/
+build/
+*.test.ts
+__tests__/
+.env*
+```
+
+### Environment Variables
+
+```bash
+# Override API server URL
+export DOKIFY_API_BASE=https://dokify.com
+
+# Set API key via environment
+export DOKIFY_API_KEY=dok_xxxxxxxxxxxxxx
+```
+
+### Config Location
+
+Configuration is stored at:
+- `~/.dokify/config.json` - User configuration
+- `~/.dokify/cache/` - AI summary cache
+
+## Web Interface
+
+Visit [dokify.com](https://dokify.com) to:
+
+- Browse your documentation in DokBase
+- Explore projects in interactive 3D with the Visualizer
+- Manage API keys and account settings
+- Share documentation with your team
+
+### 3D Visualizer Features
+
+- 🔵 **Blue Spheres** = Files (clickable to view docs)
+- 🟣 **Purple Octahedrons** = Directories (structural nodes)
+- ⚡ **Yellow Highlight** = Currently selected file
+- 📏 **Gray Lines** = Parent-child relationships
+
+**Controls:**
+- Left Click + Drag → Rotate camera
+- Scroll Wheel → Zoom in/out
+- Middle Click + Drag → Pan view
+- Click Node → View documentation
+
+## Performance Tips
+
+- Use `--concurrency 16` (or higher) for large projects
+- Let cache work - avoid `--no-cache` unless necessary
+- Exclude test files and build artifacts in `.dokignore`
+- Use `--local-only` for quick local previews
+
+## Development
+
+### Project Structure
+
+```
+Dokify/
+├── src/                # CLI source code
+│   ├── cli.ts          # Main CLI entry point
+│   ├── commands/       # CLI commands (login, generate, keys, etc.)
+│   ├── core/           # Core functionality (scan, chunk, summarize, upload)
+│   └── config.ts       # Configuration management
+├── server/             # Backend API server
+│   └── src/
+│       ├── index.ts    # Server entry point
+│       ├── auth.ts     # Authentication & OAuth
+│       ├── docs.ts     # Documentation endpoints
+│       └── llm.ts      # AI provider integration
+├── web/                # React web application
+│   └── src/
+│       ├── pages/      # Page components
+│       └── lib/        # Shared utilities
+└── docs/               # Generated documentation
+```
+
+### Running Locally
+
+#### CLI Development
+
+```bash
+# Install dependencies
 npm install
+
+# Build CLI
 npm run build
+
+# Link for local development
+npm link
+
+# Run CLI
+dok --help
 ```
 
-## Usage
-
-The Dokify CLI offers several commands for interacting with the service and generating documentation.
-
-### Authentication
-
-You can authenticate with the Dokify service in two primary ways:
-
-1.  **Device Flow Login:** This is the interactive method, which opens your web browser to complete the authentication process and securely stores the resulting token locally.
-
-    ```bash
-    dok login
-    ```
-
-2.  **API Keys:** Alternatively, you can register or log in via the web application and then retrieve API keys from your account. These keys can be set directly in the CLI.
-
-    ```bash
-    dok keys set --api-key=YOUR_GENERATED_KEY
-    ```
-
-### Configuring the API Base URL
-
-The CLI allows for persistence of the developer server's base URL and provides a mechanism for overriding it via environment variables.
-
-*   **Persistent Configuration:** Once set using the `--api` flag, future `dok login` commands will automatically use this URL.
-
-    ```bash
-    dok login --api http://127.0.0.1:4000
-    ```
-
-*   **Environment Variable Override:** For CI environments or persistent sessions, you can set the `DOKIFY_API_BASE` environment variable.
-
-    ```bash
-    export DOKIFY_API_BASE=http://127.0.0.1:4000
-    dok login
-    ```
-
-### Generating Documentation
-
-The CLI can generate documentation locally without making external calls or uploading the results. This is useful for previewing or for use in isolated environments.
+#### Server Development
 
 ```bash
-node dist/cli.js generate --local-only
+cd server
+npm install
+npm run dev
 ```
 
-### Generated Output
+Server runs at `http://localhost:4000`
 
-When documentation is generated (and before upload), the CLI creates a `docs/` folder containing:
+#### Web Development
 
-*   `files/`: Markdown files, where each file corresponds to a source file in your project.
-*   `overview/overview.md`: A markdown file providing a high-level summary of the project.
-*   `index.html`: A simple HTML viewer to browse the generated documentation.
-*   `graph.json`: A JSON file containing the nodes and edges representing the project's structure, likely for visualization purposes.
+```bash
+cd web
+npm install
+npm run dev
+```
 
-## Configuration Storage
+Web app runs at `http://localhost:5173`
 
-The Dokify CLI stores its configuration in `~/.dokify/config.json` when user permissions allow. As a fallback, it will use a local `.dokify/` folder if the global configuration is not accessible.
+### Environment Setup
 
-## Upload Functionality
+Create `.env` files:
 
-**Note:** The upload functionality is currently stubbed. It will log the intent to upload unless the `apiBas` (likely `apiBase` or similar) is explicitly configured or set. This means that for now, uploads will not actually occur.
+**`server/.env`:**
+```bash
+SUPABASE_URL=https://[your-project].supabase.co
+SUPABASE_KEY=your-service-role-key
+JWT_SECRET=your-jwt-secret
+ANTHROPIC_API_KEY=your-anthropic-key
+GOOGLE_API_KEY=your-google-key
+GITHUB_CLIENT_ID=your-github-oauth-id
+GITHUB_CLIENT_SECRET=your-github-oauth-secret
+GOOGLE_CLIENT_ID=your-google-oauth-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-secret
+```
 
-## Dependencies
+**`web/.env`:**
+```bash
+VITE_DOKIFY_API_BASE=http://localhost:4000
+```
 
-The Dokify CLI relies on `npm` for package management and build processes. Specific runtime dependencies are managed through `npm install`.
+## Architecture
 
-## Pitfalls and Considerations
+### AI Processing Pipeline
 
-*   **Stubbed Upload:** Be aware that the upload feature is not yet implemented and will only log the intention to upload.
-*   **Configuration Location:** Understand where your configuration is being stored (global `~/.dokify/config.json` vs. local `.dokify/`).
-*   **API Key Security:** Handle your API keys with care, as they grant access to your Dokify account.
+1. **Chunk-Level Analysis (Claude Haiku)**
+   - Extracts structured facts: purpose, entities, inputs/outputs, dependencies
+   - Fast, cost-effective for initial analysis
+   - Results cached for subsequent runs
 
-## Related Files
+2. **File-Level Synthesis (Gemini)**
+   - Combines chunk facts with code context
+   - Generates comprehensive, human-readable documentation
+   - Concurrent processing for speed
 
-*   **`package.json`:** (Implicitly, as it's an `npm` project) This file would define project metadata, scripts, and dependencies.
-*   **`src/cli.js`:** (Implied by `node dist/cli.js`) This is likely the entry point for the CLI application, containing the core logic for commands like `login`, `keys`, and `generate`.
-*   **`~/.dokify/config.json` or `.dokify/`:** These directories/files store the CLI's persistent configuration.
+3. **Project-Level Overview (Gemini)**
+   - Synthesizes project README with setup instructions
+   - Documents environment configs, scripts, and architecture
+   - Provides high-level understanding
+
+### Tech Stack
+
+- **CLI**: Node.js, TypeScript, Commander.js
+- **Backend**: Fastify, JWT auth, OAuth 2.0, WebSockets
+- **Frontend**: React, Vite, Mantine UI, Three.js
+- **Database**: PostgreSQL (Supabase)
+- **AI**: Anthropic Claude, Google Gemini
+
+## Deployment
+
+Dokify uses Supabase PostgreSQL for data persistence. To deploy your own instance:
+
+1. **Set up Supabase**:
+   - Create a project at [supabase.com](https://supabase.com)
+   - Run the schema in `server/schema.sql` via SQL Editor
+   - Get your `SUPABASE_URL` and `SUPABASE_KEY` (service_role) from Settings → API
+
+2. **Configure environment variables**:
+   ```bash
+   SUPABASE_URL=https://[your-project].supabase.co
+   SUPABASE_KEY=your-service-role-key
+   JWT_SECRET=your-random-secret
+   ANTHROPIC_API_KEY=sk-ant-xxx
+   GOOGLE_API_KEY=AIzaSyxxx
+   # ... other OAuth keys
+   ```
+
+3. **Deploy**:
+   - Server: Railway, Vercel, or your own VPS
+   - Web: Vercel, Netlify, or Cloudflare Pages
+
+📖 **Full deployment guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+
+## License
+
+MIT
+
+## Support
+
+For issues, questions, or feature requests:
+- Visit [dokify.com](https://dokify.com)
+- Check the [Usage Documentation](https://dokify.com/usage)
+- Report issues on GitHub
 
 ---
-Generated: 2025-10-26T04:40:15.401Z  •  Version: v6
+
+Made with ❤️ by the Dokify team
