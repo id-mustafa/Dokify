@@ -91,9 +91,11 @@ export function Visualize() {
             if (!res.ok) throw new Error(String(res.status));
             const text = await res.text();
             const json = JSON.parse(text);
+            console.log('Fetched graph:', json.nodes?.length, 'nodes,', json.edges?.length, 'edges');
             setGraph(json);
             initThree(json);
         } catch (e: any) {
+            console.error('Error fetching graph:', e);
             setError(e?.message || 'Failed to load graph');
         }
     }
@@ -201,6 +203,8 @@ export function Visualize() {
         const nodes3D: Node3D[] = [];
         const nodeMap = new Map<string, Node3D>();
 
+        console.log('Creating nodes:', g.nodes.length, 'nodes found');
+
         // Create nodes with labels
         g.nodes.forEach((node) => {
             const isDirectory = node.type === 'directory';
@@ -248,6 +252,7 @@ export function Visualize() {
 
         // Create edges (lines)
         const edgeLines: InstanceType<typeof THREE.Line>[] = [];
+        console.log('Creating edges:', g.edges.length, 'edges found');
         g.edges.forEach((edge) => {
             const sourceNode = nodeMap.get(edge.source);
             const targetNode = nodeMap.get(edge.target);
@@ -266,8 +271,11 @@ export function Visualize() {
                 const line = new THREE.Line(geometry, material);
                 scene.add(line);
                 edgeLines.push(line);
+            } else {
+                console.log('Edge missing nodes:', edge.source, '->', edge.target, 'source:', !!sourceNode, 'target:', !!targetNode);
             }
         });
+        console.log('Created', edgeLines.length, 'edge lines');
 
         // Physics simulation
         const edgeData = g.edges.map(e => ({
