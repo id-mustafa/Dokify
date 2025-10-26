@@ -193,8 +193,8 @@ export function registerAgentRoutes(app: FastifyInstance) {
                 content: question
             });
 
-            // Get project documentation
-            const projectDocs = Array.from(db.docs.values()).filter(d => d.project_id === projectId);
+            // Get project documentation from database
+            const projectDocs = await database.getDocsByProject(projectId);
 
             if (projectDocs.length === 0) {
                 const answer = 'This project has no documentation yet. Please run `dok generate` in your project directory to generate documentation first.';

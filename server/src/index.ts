@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { db } from './db.js';
 import 'dotenv/config';
 import { migrate } from './db.js';
-import { initDatabase } from './database.js';
+import { initDatabase, database } from './database.js';
 import { registerAuthRoutes } from './auth.js';
 import { registerDocsRoutes } from './docs.js';
 import { registerOAuthRoutes } from './oauth.js';
@@ -30,7 +30,7 @@ const devices = new Map<string, DeviceRecord>();
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
-const BASE = process.env.API_BASE || `http://127.0.0.1:${PORT}`;
+const BASE = process.env.API_BASE || `https://dokify-api.onrender.com:${PORT}`;
 const VERIFY_BASE = process.env.VERIFY_BASE || BASE;
 const WEB_BASE = process.env.WEB_BASE || VERIFY_BASE;
 
@@ -71,7 +71,7 @@ app.post('/v1/oauth/token', async (req, reply) => {
     if (!rec) return reply.code(400).send({ error: 'expired_token' });
     if (Date.now() > rec.expiresAt) return reply.code(400).send({ error: 'expired_token' });
     if (!rec.approvedUserId) return reply.code(400).send({ error: 'authorization_pending', interval: rec.interval });
-    const user = db.users.get(rec.approvedUserId);
+    const user = await database.getUser(rec.approvedUserId);
     if (!user) return reply.code(400).send({ error: 'authorization_pending' });
     const token = jwt.sign({ sub: user.id, email: user.email }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '7d' });
     return { access_token: token, token_type: 'Bearer', expires_in: 3600, api_key: rec.approvedApiKey } as any;
@@ -147,22 +147,18 @@ app.get('/v1/projects/:projectId/assets/:name', async (req, reply) => {
     let userId: string;
     try { userId = requireAuth(req as any); } catch { return reply.code(401).send({ error: 'unauthorized' }); }
     const { projectId, name } = req.params as any;
-    const project = db.projects.get(projectId) as any;
+    const project = await database.getProject(projectId);
     if (!project || project.owner_user_id !== userId) return reply.code(404).send({ error: 'project_not_found' });
     const allowed = new Set(['graph.json', 'index.html']);
     if (!allowed.has(String(name))) return reply.code(404).send({ error: 'not_found' });
     const nameStr = String(name);
-    // Try exact key first
-    const exactKey = projectId + '::' + nameStr;
-    let doc = db.docs.get(exactKey) as any;
-    // Fallback: find any doc with this file name suffix (e.g., nested paths)
-    if (!doc) {
-        for (const [k, v] of db.docs.entries()) {
-            if (!k.startsWith(projectId + '::')) continue;
-            const p = (v as any).path as string;
-            if (p && (p === nameStr || p.endsWith('/' + nameStr))) { doc = v; break; }
-        }
-    }
+
+    // Get all docs for this project
+    const docs = await database.getDocsByProject(projectId);
+
+    // Find the document with this name
+    let doc = docs.find((d: any) => d.path === nameStr || d.path.endsWith('/' + nameStr));
+
     if (!doc) return reply.code(404).send({ error: 'not_found' });
     if (name === 'graph.json') {
         reply.header('content-type', 'application/json');
