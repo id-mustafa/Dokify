@@ -6,8 +6,10 @@ type UploadFile = { path: string; content: string };
 
 export async function uploadDocs(params: { docsDir: string }): Promise<void> {
     const config = loadConfig();
-    if (!config.apiBaseUrl || !config.token) {
-        console.log('No API base URL or token set. Skipping upload.');
+    const authToken = config.token || config.apiKey;
+
+    if (!config.apiBaseUrl || !authToken) {
+        console.log('No API base URL or authentication set. Skipping upload.');
         return;
     }
     const api = config.apiBaseUrl.replace(/\/$/, '');
@@ -15,14 +17,14 @@ export async function uploadDocs(params: { docsDir: string }): Promise<void> {
     const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'project';
 
     // Ensure project exists (find or create)
-    const headers = { 'content-type': 'application/json', authorization: `Bearer ${config.token}` } as Record<string, string>;
-    const listRes = await fetch(`${api}/v1/projects`, { headers });
+    const headers = { 'content-type': 'application/json', authorization: `Bearer ${authToken}` } as Record<string, string>;
+    const listRes = await fetch(`${api}/projects`, { headers });
     if (!listRes.ok) throw new Error(`Failed to list projects: ${listRes.status}`);
     const listJson = (await listRes.json()) as { projects: { id: string; name: string; slug: string }[] };
     let project = listJson.projects.find((p) => p.slug === slug) || null;
     let projectId: string;
     if (!project) {
-        const createRes = await fetch(`${api}/v1/projects`, { method: 'POST', headers, body: JSON.stringify({ name: projectName, slug }) });
+        const createRes = await fetch(`${api}/projects`, { method: 'POST', headers, body: JSON.stringify({ name: projectName, slug }) });
         if (!createRes.ok) throw new Error(`Failed to create project: ${createRes.status}`);
         const created = (await createRes.json()) as { id: string };
         projectId = created.id;
@@ -44,7 +46,7 @@ export async function uploadDocs(params: { docsDir: string }): Promise<void> {
     const batchSize = 200;
     for (let i = 0; i < files.length; i += batchSize) {
         const slice = files.slice(i, i + batchSize);
-        const upRes = await fetch(`${api}/v1/projects/${projectId}/docs`, {
+        const upRes = await fetch(`${api}/projects/${projectId}/docs`, {
             method: 'POST',
             headers,
             body: JSON.stringify({ files: slice })

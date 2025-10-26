@@ -24,6 +24,13 @@ export function registerGenerateCommand(program: Command): void {
         .addHelpText('after', `\nExamples:\n  dok generate\n  dok generate --no-ai\n  dok generate --local-only\n  dok generate --concurrency 16\n`)
         .action(async (opts: { noAi?: boolean; localOnly?: boolean; concurrency?: number; noCache?: boolean }) => {
             const config = loadConfig();
+
+            // Check authentication unless using --local-only mode
+            if (!opts.localOnly && !config.token && !config.apiKey) {
+                console.error(chalk.red('\n❌ Not authenticated. Please run `dok login` or set an API key with `dok key --set <KEY>`.\n'));
+                process.exit(1);
+            }
+
             const projectRoot = process.cwd();
             const docsDir = path.join(projectRoot, 'docs');
             // Load env from root and server/.env as fallback
@@ -68,7 +75,7 @@ export function registerGenerateCommand(program: Command): void {
                     let overview = '';
                     try {
                         const cfg2 = loadConfig();
-                        const server = (cfg2.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
+                        const server = (cfg2.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'https://dokify-api.onrender.com:4000').replace(/\/$/, '');
                         const res = await fetch(server + '/v1/ai/project-readme', {
                             method: 'POST', headers: { 'content-type': 'application/json', ...(cfg2.token ? { authorization: `Bearer ${cfg2.token}` } : {}) }, body: JSON.stringify({ summaries, repoName: path.basename(projectRoot) })
                         });

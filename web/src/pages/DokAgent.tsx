@@ -34,7 +34,7 @@ export function DokAgent() {
     const [chatToDelete, setChatToDelete] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+    const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1';
 
     useEffect(() => {
         fetchProjects();
@@ -64,7 +64,7 @@ export function DokAgent() {
     async function fetchProjects() {
         try {
             const token = getToken();
-            const res = await fetch(`${API}/v1/projects`, {
+            const res = await fetch(`${API}/projects`, {
                 headers: token ? { authorization: `Bearer ${token}` } : {}
             });
             if (!res.ok) throw new Error('Failed to fetch projects');
@@ -82,7 +82,7 @@ export function DokAgent() {
         if (!selectedProjectId) return;
         try {
             const token = getToken();
-            const res = await fetch(`${API}/v1/chats?projectId=${selectedProjectId}`, {
+            const res = await fetch(`${API}/chats?projectId=${selectedProjectId}`, {
                 headers: token ? { authorization: `Bearer ${token}` } : {}
             });
             if (!res.ok) throw new Error('Failed to fetch chats');
@@ -97,7 +97,7 @@ export function DokAgent() {
         if (!selectedChatId) return;
         try {
             const token = getToken();
-            const res = await fetch(`${API}/v1/chats/${selectedChatId}/messages`, {
+            const res = await fetch(`${API}/chats/${selectedChatId}/messages`, {
                 headers: token ? { authorization: `Bearer ${token}` } : {}
             });
             if (!res.ok) throw new Error('Failed to fetch messages');
@@ -112,7 +112,7 @@ export function DokAgent() {
         if (!selectedProjectId) return;
         try {
             const token = getToken();
-            const res = await fetch(`${API}/v1/chats`, {
+            const res = await fetch(`${API}/chats`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
@@ -135,7 +135,7 @@ export function DokAgent() {
     async function deleteChat(chatId: string) {
         try {
             const token = getToken();
-            const res = await fetch(`${API}/v1/chats/${chatId}`, {
+            const res = await fetch(`${API}/chats/${chatId}`, {
                 method: 'DELETE',
                 headers: token ? { authorization: `Bearer ${token}` } : {}
             });
@@ -160,7 +160,7 @@ export function DokAgent() {
 
         try {
             const token = getToken();
-            const res = await fetch(`${API}/v1/agent/ask`, {
+            const res = await fetch(`${API}/agent/ask`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',

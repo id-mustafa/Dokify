@@ -68,7 +68,7 @@ export class GeminiProvider {
             const text: string = json?.candidates?.[0]?.content?.parts?.[0]?.text || '';
             return text && text.trim().length > 0 ? text : '# README\n\nSetup instructions unavailable.';
         } catch {
-            return `# ${options.repoName}\n\n## Quick start\n- npm install\n- dok login\n- dok generate\n\n## Environment\n- DEV: local server at http://127.0.0.1:4000\n- PROD: configure API_BASE and JWT_SECRET\n\n## Architecture\nAuto-generated.`;
+            return `# ${options.repoName}\n\n## Quick start\n- npm install\n- dok login\n- dok generate\n\n## Environment\n- DEV: local server at https://dokify-api.onrender.com:4000\n- PROD: configure API_BASE and JWT_SECRET\n\n## Architecture\nAuto-generated.`;
         }
     }
 }

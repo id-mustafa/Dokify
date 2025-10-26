@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const API_BASE = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+const API_BASE = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1';
 
 export function Verify() {
     const [status, setStatus] = useState('');
@@ -12,7 +12,7 @@ export function Verify() {
             setStatus('Missing user_code');
             return;
         }
-        fetch(`${API_BASE}/v1/verify`, {
+        fetch(`${API_BASE}/verify`, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ user_code })

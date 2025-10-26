@@ -6,7 +6,7 @@ import { DokifyApiClient } from '../api/client.js';
 import open from 'node:child_process';
 
 export function registerLoginCommand(program: Command): void {
-    const API_BASE_URL = process.env.API_BASE_URL || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000';
+    const API_BASE_URL = process.env.API_BASE_URL || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'https://dokify-api.onrender.com:4000';
     program
         .command('login')
         .description('Authenticate the Dokify CLI')

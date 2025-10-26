@@ -25,9 +25,9 @@ export function Login() {
                 try {
                     const params = new URLSearchParams(window.location.search);
                     const deviceCode = params.get('device_code') || (localStorage.getItem('dok_device_code') || '');
-                    const apiBase = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+                    const apiBase = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'https://dokify-api.onrender.com:4000/v1';
                     if (deviceCode) {
-                        fetch(`${apiBase}/v1/oauth/approve`, {
+                        fetch(`${apiBase}/oauth/approve`, {
                             method: 'POST',
                             headers: { 'content-type': 'application/json', authorization: `Bearer ${t}` },
                             body: JSON.stringify({ device_code: deviceCode })
@@ -50,7 +50,7 @@ export function Login() {
         e.preventDefault();
         setLoading(true); setError('');
         try {
-            const path = mode === 'login' ? '/v1/auth/login' : '/v1/auth/register';
+            const path = mode === 'login' ? '/auth/login' : '/auth/register';
             const payload = mode === 'login' ? { email, password } : { name, email, password };
             const res = await api(path, { method: 'POST', body: JSON.stringify(payload) });
             setToken(res.access_token);
@@ -58,9 +58,9 @@ export function Login() {
             try {
                 const params = new URLSearchParams(window.location.search);
                 const deviceCode = params.get('device_code') || (localStorage.getItem('dok_device_code') || '');
-                const apiBase = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+                const apiBase = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1';
                 if (deviceCode) {
-                    await fetch(`${apiBase}/v1/oauth/approve`, {
+                    await fetch(`${apiBase}/oauth/approve`, {
                         method: 'POST',
                         headers: { 'content-type': 'application/json', authorization: `Bearer ${res.access_token}` },
                         body: JSON.stringify({ device_code: deviceCode })
@@ -124,7 +124,7 @@ export function Login() {
                                     onClick={() => {
                                         const dc = new URLSearchParams(window.location.search).get('device_code');
                                         if (dc) try { localStorage.setItem('dok_device_code', dc); } catch { }
-                                        window.location.href = `${(import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000'}/v1/oauth/github/start`;
+                                        window.location.href = `${(import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1'}/oauth/github/start`;
                                     }}
                                     leftSection={<img alt="GitHub" src="https://cdn.simpleicons.org/github/fff" style={{ width: 16, height: 16 }} />}
                                 >
@@ -136,7 +136,7 @@ export function Login() {
                                     onClick={() => {
                                         const dc = new URLSearchParams(window.location.search).get('device_code');
                                         if (dc) try { localStorage.setItem('dok_device_code', dc); } catch { }
-                                        window.location.href = `${(import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000'}/v1/oauth/google/start`;
+                                        window.location.href = `${(import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1'}/oauth/google/start`;
                                     }}
                                     leftSection={<img alt="Google" src="https://cdn.simpleicons.org/google/fff" style={{ width: 16, height: 16 }} />}
                                 >

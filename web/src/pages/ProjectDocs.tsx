@@ -20,8 +20,8 @@ export function ProjectDocs() {
 
     async function refresh() {
         const [filesRes, treeRes] = await Promise.all([
-            api(`/v1/projects/${projectId}/docs`),
-            api(`/v1/projects/${projectId}/docs-tree`)
+            api(`/projects/${projectId}/docs`),
+            api(`/projects/${projectId}/docs-tree`)
         ]);
         setFiles(filesRes.files || []);
         setTree(Array.isArray(treeRes.tree) ? treeRes.tree : []);

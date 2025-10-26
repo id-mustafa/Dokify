@@ -1,4 +1,4 @@
-const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1';
 
 export function getToken(): string | null {
     return localStorage.getItem('dokify_token');

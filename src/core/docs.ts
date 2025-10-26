@@ -79,11 +79,11 @@ export async function writeDocs(params: WriteDocsParams): Promise<WriteDocsResul
                     // Server-side synthesis fallback
                     try {
                         const cfg = loadConfig();
-                        const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
+                        const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'https://dokify-api.onrender.com:4000').replace(/\/$/, '');
                         const snippets = params.chunks
                             .filter((c) => c.filePath === filePath)
                             .map((c) => ({ index: c.index, startLine: c.startLine, endLine: c.endLine, content: c.content }));
-                        const res = await fetch(server + '/v1/ai/file-synthesis', {
+                        const res = await fetch(server + '/ai/file-synthesis', {
                             method: 'POST', headers: { 'content-type': 'application/json', ...(cfg.token ? { authorization: `Bearer ${cfg.token}` } : {}) },
                             body: JSON.stringify({ filePath: rel, summaries: list, snippets })
                         });
@@ -113,8 +113,8 @@ export async function writeDocs(params: WriteDocsParams): Promise<WriteDocsResul
     if (params.useAI) {
         try {
             const cfg = loadConfig();
-            const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
-            const res = await fetch(server + '/v1/ai/project-readme', {
+            const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'https://dokify-api.onrender.com:4000').replace(/\/$/, '');
+            const res = await fetch(server + '/ai/project-readme', {
                 method: 'POST', headers: { 'content-type': 'application/json', ...(cfg.token ? { authorization: `Bearer ${cfg.token}` } : {}) },
                 body: JSON.stringify({ summaries: params.summaries, repoName: path.basename(params.projectRoot) })
             });

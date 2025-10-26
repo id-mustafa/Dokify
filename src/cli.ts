@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { registerLoginCommand } from './commands/login.js';
 import { registerGenerateCommand } from './commands/generate.js';
+import { registerUploadCommand } from './commands/upload.js';
 import { registerKeysCommand } from './commands/keys.js';
 import { registerWhoAmICommand } from './commands/whoami.js';
 import { registerLogoutCommand } from './commands/logout.js';
@@ -20,6 +21,7 @@ program
 
 registerLoginCommand(program);
 registerGenerateCommand(program);
+registerUploadCommand(program);
 registerKeysCommand(program);
 registerWhoAmICommand(program);
 registerLogoutCommand(program);

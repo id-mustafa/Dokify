@@ -20,6 +20,14 @@ export function registerKeysCommand(program: Command): void {
             }
             if (typeof opts.set === 'string') {
                 cfg.apiKey = opts.set;
+
+                // If apiBaseUrl is not set, set it to the default
+                if (!cfg.apiBaseUrl) {
+                    const defaultUrl = process.env.DOKIFY_API_BASE || 'https://dokify-api.onrender.com:4000/v1';
+                    cfg.apiBaseUrl = defaultUrl;
+                    console.log(chalk.gray(`ℹ  API base URL set to: ${defaultUrl}`));
+                }
+
                 saveConfig(cfg);
                 console.log(chalk.green('✓ Dokify API key set'));
                 return;

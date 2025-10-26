@@ -14,8 +14,8 @@ export function Projects() {
     useEffect(() => {
         refresh();
         // Live updates via WebSocket
-        const apiBase = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
-        const url = apiBase.replace('http', 'ws') + '/ws';
+        const apiBase = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1';
+        const url = apiBase.replace('http', 'ws').replace('/v1', '') + '/ws';
         try {
             const ws = new WebSocket(url);
             wsRef.current = ws;
@@ -35,18 +35,18 @@ export function Projects() {
 
     async function refresh() {
         setLoading(true);
-        try { const res = await api('/v1/projects'); setProjects(res.projects || []); } finally { setLoading(false); }
+        try { const res = await api('/projects'); setProjects(res.projects || []); } finally { setLoading(false); }
     }
 
     async function create() {
         if (!name.trim()) return;
-        await api('/v1/projects', { method: 'POST', body: JSON.stringify({ name }) });
+        await api('/projects', { method: 'POST', body: JSON.stringify({ name }) });
         setName('');
         refresh();
     }
 
     async function remove(id: string) {
-        await api(`/v1/projects/${id}`, { method: 'DELETE' });
+        await api(`/projects/${id}`, { method: 'DELETE' });
         refresh();
     }
 

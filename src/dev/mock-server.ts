@@ -10,7 +10,7 @@ type DeviceRecord = {
 };
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
-const HOST = process.env.HOST || '127.0.0.1';
+const HOST = process.env.HOST || 'https://dokify-api.onrender.com';
 const BASE = `http://${HOST}:${PORT}`;
 const VERIFY_BASE = process.env.VERIFY_BASE || BASE; // point to web app if set
 
@@ -45,7 +45,7 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Headers', 'content-type, authorization');
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
-    if (req.method === 'POST' && path === '/v1/oauth/device') {
+    if (req.method === 'POST' && path === '/oauth/device') {
         const body = await parseBody(req);
         if (!body || !body.client_id) return json(res, 400, { error: 'invalid_request' });
         const deviceCode = 'dev-' + Math.random().toString(36).slice(2, 10);
@@ -80,7 +80,7 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    if (req.method === 'POST' && path === '/v1/oauth/token') {
+    if (req.method === 'POST' && path === '/oauth/token') {
         const body = await parseBody(req);
         if (!body || body.grant_type !== 'urn:ietf:params:oauth:grant-type:device_code' || !body.device_code) {
             return json(res, 400, { error: 'invalid_request' });
@@ -97,7 +97,7 @@ const server = http.createServer(async (req, res) => {
         });
     }
 
-    if (req.method === 'GET' && path === '/v1/me') {
+    if (req.method === 'GET' && path === '/me') {
         const auth = req.headers['authorization'] || '';
         if (!auth.startsWith('Bearer ')) return json(res, 401, { error: 'unauthorized' });
         return json(res, 200, { id: 'user_123', email: 'dev@example.com', name: 'Dev User', org: { id: 'org_123', name: 'Dokify Dev' } });

@@ -67,9 +67,9 @@ export function Visualize() {
 
     async function fetchProjects() {
         try {
-            const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+            const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1';
             const token = getToken();
-            const res = await fetch(`${API}/v1/projects`, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+            const res = await fetch(`${API}/projects`, { headers: token ? { authorization: `Bearer ${token}` } : {} });
             if (!res.ok) throw new Error(String(res.status));
             const json = await res.json() as { projects: Project[] };
             setProjects(json.projects || []);
@@ -85,9 +85,9 @@ export function Visualize() {
     async function fetchGraph(id: string) {
         setGraph(null); setError(null);
         try {
-            const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+            const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1';
             const token = getToken();
-            const res = await fetch(`${API}/v1/projects/${id}/assets/graph.json`, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+            const res = await fetch(`${API}/projects/${id}/assets/graph.json`, { headers: token ? { authorization: `Bearer ${token}` } : {} });
             if (!res.ok) throw new Error(String(res.status));
             const text = await res.text();
             const json = JSON.parse(text);
@@ -100,9 +100,9 @@ export function Visualize() {
 
     async function fetchDocs(id: string) {
         try {
-            const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000';
+            const API = (import.meta as any).env?.VITE_DOKIFY_API_BASE || 'http://127.0.0.1:4000/v1';
             const token = getToken();
-            const res = await fetch(`${API}/v1/projects/${id}/docs`, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+            const res = await fetch(`${API}/projects/${id}/docs`, { headers: token ? { authorization: `Bearer ${token}` } : {} });
             if (!res.ok) return;
             const json = await res.json() as { files: { path: string; content: string }[] };
             const map: Record<string, string> = {};

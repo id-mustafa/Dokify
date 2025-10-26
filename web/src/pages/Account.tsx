@@ -9,15 +9,15 @@ export function Account() {
     const [keys, setKeys] = useState<Array<{ id: string; label: string; created_at: number; last_used_at: number | null; usage_count: number; key?: string }>>([]);
     const [label, setLabel] = useState('');
     useEffect(() => {
-        api('/v1/me').then(setMe).catch(() => setMe(null));
+        api('/me').then(setMe).catch(() => setMe(null));
         refreshKeys();
     }, []);
     async function refreshKeys() {
-        try { const res = await api('/v1/api-keys'); setKeys(res.keys || []); } catch { }
+        try { const res = await api('/api-keys'); setKeys(res.keys || []); } catch { }
     }
 
     async function createKey() {
-        const res = await api('/v1/api-keys', { method: 'POST', body: JSON.stringify({ label }) });
+        const res = await api('/api-keys', { method: 'POST', body: JSON.stringify({ label }) });
         setLabel('');
         // Surface the newly created secret key once for copy
         setKeys((prev) => [{ id: res.id, label: res.label, created_at: res.created_at, last_used_at: null, usage_count: 0, key: res.key }, ...prev]);
@@ -29,7 +29,7 @@ export function Account() {
     }
 
     async function revokeKey(id: string) {
-        await api(`/v1/api-keys/${id}`, { method: 'DELETE' });
+        await api(`/api-keys/${id}`, { method: 'DELETE' });
         refreshKeys();
     }
 
@@ -73,7 +73,7 @@ export function Account() {
                         </Table.Thead>
                         <Table.Tbody>
                             {keys.map((k) => {
-                                const cliCmd = `dok keys set --api-key=${k.key || '<secret-on-create>'}`;
+                                const cliCmd = `dok key --set ${k.key || '<secret-on-create>'}`;
                                 return (
                                     <Table.Tr key={k.id}>
                                         <Table.Td>

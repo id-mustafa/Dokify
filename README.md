@@ -56,6 +56,18 @@ dok generate --no-cache           # Bypass cache, regenerate everything
 dok generate --help               # Show all options
 ```
 
+### `dok upload`
+Upload existing documentation without regenerating it. Useful when you've already generated docs and just want to push them to Dokify.
+
+```bash
+# Upload existing ./docs folder
+dok upload
+```
+
+**Requirements:**
+- You must be logged in (`dok login`)
+- The `./docs` folder must exist (run `dok generate` first)
+
 ### `dok key`
 Manage your Dokify API key.
 

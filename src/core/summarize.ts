@@ -48,7 +48,7 @@ export async function summarizeChunks(chunks: FileChunk[], options: SummarizeOpt
                         try {
                             // Fetch server-side chunk summary (requires auth)
                             const cfg = loadConfig();
-                            const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'http://127.0.0.1:4000').replace(/\/$/, '');
+                            const server = (cfg.apiBaseUrl || process.env.DOKIFY_API_BASE || process.env.DOKIFY_API_URL || 'https://dokify-api.onrender.com:4000').replace(/\/$/, '');
                             const res = await fetch(server.replace(/\/$/, '') + '/v1/ai/chunk-summaries', {
                                 method: 'POST',
                                 headers: {
